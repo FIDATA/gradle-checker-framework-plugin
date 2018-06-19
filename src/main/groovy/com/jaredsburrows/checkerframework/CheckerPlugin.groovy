@@ -91,8 +91,11 @@ final class CheckerPlugin implements Plugin<Project> {
 
         ANDROID_IDS.each { id ->
           project.plugins.withId(id) {
-            options.bootClasspath = System.getProperty("sun.boot.class.path") + ":" + options.bootClasspath
-            options.bootClasspath = "${project.configurations[JAVAC_CONFIGURATION].asPath}:".toString() + ":" + options.bootClasspath
+            options.bootClasspath = [
+              System.getProperty("sun.boot.class.path"),
+              "${project.configurations[JAVAC_CONFIGURATION].asPath}".toString(),
+              options.bootClasspath
+            ].join(File.pathSeparator)
           }
         }
         options.fork = true
