@@ -6,6 +6,7 @@ ext {
 
 // Dependencies
 ext.deps = [
+        "apt"               : "net.ltgt.gradle:gradle-apt-plugin:0.16",
         "gradle"            : "com.android.tools.build:gradle:3.0.1",
         "spockCore"         : "org.spockframework:spock-core:1.1-groovy-2.4"
 ]

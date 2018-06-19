@@ -23,6 +23,8 @@ final class CheckerPlugin implements Plugin<Project> {
   private final static def JAVAC_CONFIGURATION_DESCRIPTION = "A customization of the OpenJDK javac compiler with additional support for type annotations."
   private final static def CONFIGURATION = "checkerFramework"
   private final static def CONFIGURATION_DESCRIPTION = "The Checker Framework: custom pluggable types for Java."
+  private final static def ANNOTATION_PROCESSOR_CONFIGURATION = "annotationProcessor"
+  private final static def TEST_ANNOTATION_PROCESSOR_CONFIGURATION = "testAnnotationProcessor"
   private final static def JAVA_COMPILE_CONFIGURATION = "compile"
   private final static def COMPILER_DEPENDENCY = "org.checkerframework:compiler:${LIBRARY_VERSION}"
   private final static def CHECKER_DEPENDENCY = "org.checkerframework:checker:${LIBRARY_VERSION}"
@@ -35,6 +37,8 @@ final class CheckerPlugin implements Plugin<Project> {
   }
 
   private static configureProject(def project) {
+    project.plugins.apply 'net.ltgt.apt'
+
     JavaVersion javaVersion =
         project.extensions.findByName('android')?.compileOptions?.sourceCompatibility ?:
         project.convention.findByName('jdk')?.sourceCompatibility ?:
@@ -57,7 +61,9 @@ final class CheckerPlugin implements Plugin<Project> {
       [name: "${ANNOTATED_JDK_CONFIGURATION}", description: "${ANNOTATED_JDK_CONFIGURATION_DESCRIPTION}"]: "org.checkerframework:${jdkVersion}:${LIBRARY_VERSION}",
       [name: "${JAVAC_CONFIGURATION}", description: "${JAVAC_CONFIGURATION_DESCRIPTION}"]                : "${COMPILER_DEPENDENCY}",
       [name: "${CONFIGURATION}", description: "${ANNOTATED_JDK_CONFIGURATION_DESCRIPTION}"]              : "${CHECKER_DEPENDENCY}",
-      [name: "${JAVA_COMPILE_CONFIGURATION}", description: "${CONFIGURATION_DESCRIPTION}"]               : "${CHECKER_QUAL_DEPENDENCY}"
+      [name: "${JAVA_COMPILE_CONFIGURATION}", description: "${CONFIGURATION_DESCRIPTION}"]               : "${CHECKER_QUAL_DEPENDENCY}",
+      [name: "${ANNOTATION_PROCESSOR_CONFIGURATION}"]                                                    : "${CHECKER_DEPENDENCY}",
+      [name: "${TEST_ANNOTATION_PROCESSOR_CONFIGURATION}"]                                               : "${CHECKER_DEPENDENCY}"
     ]
 
     // Now, apply the dependencies to project
@@ -81,25 +87,24 @@ final class CheckerPlugin implements Plugin<Project> {
     // Apply checker to project
     project.gradle.projectsEvaluated {
       project.tasks.withType(AbstractCompile).all { compile ->
-        compile.options.compilerArgs = [
-          "-processorpath", "${project.configurations[CONFIGURATION].asPath}".toString(),
-          "-Xbootclasspath/p:${project.configurations[ANNOTATED_JDK_CONFIGURATION].asPath}".toString()
-        ]
-        if (!userConfig.checkers.empty) {
-          compile.options.compilerArgs << "-processor" << userConfig.checkers.join(",")
-        }
-
-        ANDROID_IDS.each { id ->
-          project.plugins.withId(id) {
-            options.bootClasspath = [
-              System.getProperty("sun.boot.class.path"),
-              "${project.configurations[JAVAC_CONFIGURATION].asPath}".toString(),
-              options.bootClasspath
-            ].join(File.pathSeparator)
+        compile.options.with {
+          compilerArgs << "-Xbootclasspath/p:${project.configurations[ANNOTATED_JDK_CONFIGURATION].asPath}".toString()
+          if (!userConfig.checkers.empty) {
+            compilerArgs << "-processor" << userConfig.checkers.join(",")
           }
+
+          ANDROID_IDS.each { id ->
+            project.plugins.withId(id) {
+              bootClasspath = [
+                System.getProperty("sun.boot.class.path"),
+                "${project.configurations[JAVAC_CONFIGURATION].asPath}".toString(),
+                bootClasspath
+              ].join(File.pathSeparator)
+            }
+          }
+          fork = true
+          //        forkOptions.jvmArgs += ["-Xbootclasspath/p:${project.configurations[JAVAC_CONFIGURATION].asPath}"]
         }
-        options.fork = true
-        //        options.forkOptions.jvmArgs += ["-Xbootclasspath/p:${project.configurations[JAVAC_CONFIGURATION].asPath}"]
       }
     }
   }

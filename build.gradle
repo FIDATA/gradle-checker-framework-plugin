@@ -12,6 +12,7 @@ plugins {
 repositories {
   jcenter()
   google()
+  gradlePluginPortal()
 }
 
 apply from: "gradle/dependencies.gradle"
@@ -37,6 +38,7 @@ jar {
 
 dependencies {
   implementation localGroovy()
+  runtimeOnly deps.apt
 
   testImplementation deps.gradle
   testImplementation deps.spockCore, { exclude module: "groovy-all" } // Use localGroovy()
