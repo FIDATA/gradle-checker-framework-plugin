@@ -49,10 +49,10 @@ final class CheckerPlugin implements Plugin<Project> {
 
     // Create a map of the correct configurations with dependencies
     def dependencyMap = [
-      [name: "${ANNOTATED_JDK_CONFIGURATION}", descripion: "${ANNOTATED_JDK_CONFIGURATION_DESCRIPTION}"]: "org.checkerframework:${jdkVersion}:${LIBRARY_VERSION}",
-      [name: "${JAVAC_CONFIGURATION}", descripion: "${JAVAC_CONFIGURATION_DESCRIPTION}"]                : "${COMPILER_DEPENDENCY}",
-      [name: "${CONFIGURATION}", descripion: "${ANNOTATED_JDK_CONFIGURATION_DESCRIPTION}"]              : "${CHECKER_DEPENDENCY}",
-      [name: "${JAVA_COMPILE_CONFIGURATION}", descripion: "${CONFIGURATION_DESCRIPTION}"]               : "${CHECKER_QUAL_DEPENDENCY}"
+      [name: "${ANNOTATED_JDK_CONFIGURATION}", description: "${ANNOTATED_JDK_CONFIGURATION_DESCRIPTION}"]: "org.checkerframework:${jdkVersion}:${LIBRARY_VERSION}",
+      [name: "${JAVAC_CONFIGURATION}", description: "${JAVAC_CONFIGURATION_DESCRIPTION}"]                : "${COMPILER_DEPENDENCY}",
+      [name: "${CONFIGURATION}", description: "${ANNOTATED_JDK_CONFIGURATION_DESCRIPTION}"]              : "${CHECKER_DEPENDENCY}",
+      [name: "${JAVA_COMPILE_CONFIGURATION}", description: "${CONFIGURATION_DESCRIPTION}"]               : "${CHECKER_QUAL_DEPENDENCY}"
     ]
 
     // Now, apply the dependencies to project
@@ -64,7 +64,7 @@ final class CheckerPlugin implements Plugin<Project> {
       } else {
         // If the user does not have the configuration, the plugin will create it
         project.configurations.create(configuration.name) { files ->
-          files.description = configuration.descripion
+          files.description = configuration.description
           files.visible = false
           files.defaultDependencies { dependencies ->
             dependencies.add(project.dependencies.create(dependency))
